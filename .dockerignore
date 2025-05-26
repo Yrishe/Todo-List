@@ -1,4 +1,11 @@
-*.pyc
 __pycache__/
-todos.db
+*.pyc
+*.pyo
+*.db
+*.sqlite
+*.log
 .env
+venv/
+migrations/
+tests/
+.git

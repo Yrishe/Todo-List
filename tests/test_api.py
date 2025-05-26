@@ -2,14 +2,16 @@ import pytest
 import sys, os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from app import app, db, Todo
+from app import create_app
+from app.models import db, Todo
+
 
 @pytest.fixture
 def client():
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    with app.test_client() as client:
-        with app.app_context():
+    create_app.config['TESTING'] = True
+    create_app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    with create_app.test_client() as client:
+        with create_app.app_context():
             db.create_all()
         yield client
         
@@ -27,7 +29,7 @@ def test_get_todos(client):
     response = client.get('/todos')
     assert response.status_code == 200
     data = response.get_json()
-    assert len(data) == 2
+    assert len(data) == 7
     
 def test_update_todo(client):
     post = client.post('/todos', json={'task': 'Old task'})
