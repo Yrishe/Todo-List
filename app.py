@@ -109,7 +109,7 @@ def update_todo(todo_id):
     if not data:
         return jsonify({'error': 'Invalid JSON data'}), 400
     
-    todo = Todo.query.get(todo_id)
+    todo = db.session.get(Todo, todo_id)
     if not todo:
         return jsonify({'error': 'Todo not found'}), 404
     
@@ -139,7 +139,7 @@ def update_todo(todo_id):
 # Route to delete a todo
 @app.route('/todos/<int:todo_id>', methods=['DELETE'])
 def delete_todo(todo_id):
-    todo = Todo.query.get(todo_id)
+    todo = db.session.get(Todo, todo_id)
     if not todo:
         return jsonify({'error': 'Todo not found'}), 404
     db.session.delete(todo)
