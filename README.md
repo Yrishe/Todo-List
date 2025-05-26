@@ -29,18 +29,6 @@ This project is ideal for Flask beginners, web dev learners, or anyone needing a
 
 todo-flask-api/
 
-├── app/
-│ ├── init.py # App factory
-│ ├── models.py # SQLAlchemy models
-│ ├── routes.py # Main API endpoints
-│ ├── config.py # App settings
-│ └── static/
-│ ├── index.html # UI
-│ └── main.js # UI logic
-├── run.py # App entry point
-├── requirements.txt
-├── Dockerfile
-└── README.md
 
 ---
 
