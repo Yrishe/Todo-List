@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask import abort
 from flask import send_from_directory
+from datetime import datetime
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -19,18 +20,25 @@ class Todo(db.Model):
     task = db.Column(db.String(200), nullable=False)
     done = db.Column(db.Boolean, default=False)
     
+    due_date = db.Column(db.DateTime, nullable=True)
+    tags = db.Column(db.String(100), nullable=True)
+    priority = db.Column(db.Integer, default=2)
+    
     # Method to convert the Todo object to a dictionary, helps in JSON serialization
     def to_dict(self):
         return {
             'id': self.id,
             'task': self.task,
-            'done': self.done
+            'done': self.done,
+            'due_date': self.due_date.isoformat() if self.due_date else None,
+            'tags': self.tags,
+            'priority': self.priority
         }
 
 #Route to get all todos
 @app.route('/todos', methods=['GET'])
 def get_todos():
-    todos = Todo.query.all()
+    todos = Todo.query.order_by(Todo.id).all()
     return jsonify([todo.to_dict() for todo in todos]), 200
 
     # Read query parameters
@@ -73,8 +81,21 @@ def add_todo():
     if len(data['task'].strip()) > 200:
         return jsonify({'error': 'Task must be 200 characters or less'}), 400
     
+    due_date = None
+    if 'due_date' in data:
+        try:
+            due_date = datetime.strptime(data['due_date'], '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({'error': 'Invalid date format, use ISO format'}), 400
     
-    todo = Todo(task=data['task'].strip(), done=False)
+    todo = Todo(
+        task=data['task'].strip(), 
+        done=False,
+        due_date=due_date,
+        tags=data.get('tags'),
+        priority=int(data.get('priority', 2))
+    )
+    
     db.session.add(todo)
     db.session.commit()
     
@@ -96,6 +117,21 @@ def update_todo(todo_id):
         todo.task = data['task'].strip()
     if 'done' in data:
         todo.done = bool(data['done'])
+        
+    if 'due_date' in data:
+        if data['due_date']:
+            try:
+                todo.due_date = datetime.strptime(data['due_date'], '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({'error': 'Invalid date format, use ISO format'}), 400
+        else:
+            todo.due_date = None
+    
+    if 'tags' in data:
+        todo.tags = data['tags']
+    
+    if 'priority' in data:
+        todo.priority = int(data['priority'])
 
     db.session.commit()
     return jsonify(todo.to_dict()), 200
@@ -125,10 +161,12 @@ def serve_frontend():
     return send_from_directory('static', 'index.html')
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
-    
 # Create the database and tables
 with app.app_context():
     db.create_all()
+    
+
+if __name__ == '__main__':
+    app.run(debug=True)
+    
     
